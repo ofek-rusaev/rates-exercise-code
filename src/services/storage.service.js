@@ -1,10 +1,9 @@
-function store(key, any) {
-    localStorage[key] = JSON.stringify(any);
+function store(key, data) {
+    localStorage.setItem(key, JSON.stringify({ data, modifiedAt: Date.now() }));
 }
 
 function load(key) {
-    var str = localStorage[key] || 'null';
-    return JSON.parse(str);
+    return JSON.parse(localStorage.getItem(key))
 }
 
 export const storageService = {

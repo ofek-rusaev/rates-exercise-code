@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 // @material-ui/core components
 import { Table, TableHead, TableRow, TableBody, TableCell, TableContainer, TablePagination } from "@material-ui/core";
@@ -6,7 +6,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
 
 // Services
-import { ratesService } from '../services/rates.service';
+import { ratesService, REFRESH_TIME } from '../services/rates.service';
 
 // Components
 import CircularIndeterminate from '../components/CircularIndeterminate';
@@ -42,6 +42,20 @@ export default function RatesTable() {
     const [rows, setRows] = React.useState([]);
     const [page, setPage] = React.useState(0);
     const [rowsPerPage, setRowsPerPage] = React.useState(15);
+    const [isFetching, setIsFetching] = React.useState(true);
+
+    useEffect(() => {
+        async function getRows() {
+            setIsFetching(true);
+            let data = await ratesService.query();
+            setIsFetching(false);
+            setRows(data);
+        }
+        getRows();
+        const intervalId = setInterval(getRows, REFRESH_TIME);
+        return () => clearInterval(intervalId);
+    }, []);
+
     const handleChangePage = (event, newPage) => {
         setPage(newPage);
     };
@@ -51,15 +65,8 @@ export default function RatesTable() {
         setPage(0);
     };
 
-    async function getRows() {
-        let data = await ratesService.query();
-        setRows(data);
-    }
-
-    getRows();
-
     return (
-        (rows.length > 1) ?
+        (isFetching) ? <CircularIndeterminate /> :
             <div>
                 <TableContainer component={Paper}>
                     <Table className={classes.table} size="small" aria-label="a dense table">
@@ -90,7 +97,7 @@ export default function RatesTable() {
                     onChangePage={handleChangePage}
                     onChangeRowsPerPage={handleChangeRowsPerPage}
                 />
-            </div> :
-            <CircularIndeterminate />
+            </div>
+
     );
 }
